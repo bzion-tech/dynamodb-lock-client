@@ -1,0 +1,50 @@
+version: 2.1
+
+commands:
+  prepare_maven_environment:
+    steps:
+      - run:
+          name: Importing Settings from environment
+          command: |
+            echo $SETTINGS_XML >> settings.xml
+
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    environment:
+      MAVEN_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+      - prepare_maven_environment
+      - run: mvn -s settings.xml clean install
+      - save_cache:
+          paths:
+            - .
+          key: dynamodb-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+
+  release:
+    docker:
+      - image: sportebois/docker-alpine-aws-cli
+
+    steps:
+      - restore_cache:
+          key: dynamodb-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+
+      - run: aws s3 sync /home/circleci/.m2/repository/com/amazonaws/dynamodb-lock-client/1.2.0/ s3://bzion-varejo-mvn/release/com/amazonaws/dynamodb-lock-client/1.2.0/ --metadata-directive REPLACE --delete
+
+workflows:
+  version: 2
+  build-release:
+    jobs:
+      - build:
+          context: Bzion
+      - release:
+          context: Bzion
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
