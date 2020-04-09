@@ -1,13 +1,5 @@
 version: 2.1
 
-commands:
-  prepare_maven_environment:
-    steps:
-      - run:
-          name: Importing Settings from environment
-          command: |
-            echo $SETTINGS_XML >> settings.xml
-
 jobs:
   build:
     docker:
@@ -18,7 +10,6 @@ jobs:
 
     steps:
       - checkout
-      - prepare_maven_environment
       - run: mvn -s settings.xml clean install
       - save_cache:
           paths:
