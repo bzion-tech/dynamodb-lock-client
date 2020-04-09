@@ -24,7 +24,8 @@ jobs:
       - restore_cache:
           key: dynamodb-{{ .Environment.CIRCLE_WORKFLOW_ID }}
 
-      - run: ls -al
+      - run: ls -al /home/
+      - run: ls -al /home/circleci/
       - run: ls -al /home/circleci/project/.m2
       - run: aws s3 sync /home/circleci/project/.m2/repository/com/amazonaws/dynamodb-lock-client/1.2.0/ s3://bzion-varejo-mvn/release/com/amazonaws/dynamodb-lock-client/1.2.0/ --metadata-directive REPLACE --delete
 
